@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 	<title>demo</title>
-	<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="jquery.min.js"></script>
 </head>
 <body>
 <style>
@@ -264,32 +264,6 @@ function deletes(){
 	alert("密码删除成功");
 	location.replace(location);
 }
-//  异步提交
-	/*$.ajax({
-		type : "GET",
-		url : "http://cachago.cn/home_ajax.php?do=new",
-		dataType : "jsonp",
-		jsonp: "jsoncallback",
-	    jsonpCallback:"success_jsonpCallback",
-		success:function(result){
-		}
-	})*/
-//  同步=》异步=》回调
 
-	//let是ES6语法，ES5中的变量作用域是函数，而let语法的作用域是当前块，在这里就是for循环体。
-// for(let i =0 ;i <5 ; i++ ){
-// 	setTimeout(function(){
-// 		console.log("1--"+i)
-// 	},0)
-// 	console.log("2--"+i)
-// }
-	// for(var i =0 ;i <5 ; i++ ){
-	// 	loop(i);
-	// }
-	// function loop(i){
-	// 	setTimeout(function(){
-	// 		// console.log(i)
-	// 	},100)
-	// }
 </script>
 </html>
