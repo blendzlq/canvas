@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<title>demo</title>
+	<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+<body>
+<style>
+*{
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+	h1{
+		width: 100%;
+		line-height: 60px;
+		text-align: center;
+		margin-bottom: 50px;
+	}
+	canvas{
+		display: block;
+		margin: 0 auto;
+		border: 1px solid red;
+	}
+	#dele{
+		display: block;
+		margin: 0 auto;
+		margin-top: 50px;
+		width: 60%;
+		text-align: center;
+		line-height: 60px;
+	}
+</style>
+<h1>手势解锁</h1>
+<canvas id="canvas" width="300px" height="300px"></canvas>	
+<input type="button" value="清楚密码" onclick="deletes()" id="dele">
+</body>
+<script>
+var shoushi_password,e_flag;
+if(localStorage.shoushi_password){
+	$("h1").html("你已经创建密码");
+	setTimeout(function(){
+		$("h1").html("请输入密码解锁");
+	},500)
+	e_flag=true;
+	shoushi_password=localStorage.shoushi_password;
+}else{
+	e_flag=false;
+	$("h1").html("你还没有创建密码");
+}
+//   存
+//localStorage.shoushi_password=152554;
+
+var canvas=document.getElementById("canvas");  //得到一个canavs对象
+var ctx = canvas.getContext("2d");				//得到一个2d画笔
+ctx.lineWidth = 3;								//设置线宽
+ctx.fillStyle="#000";                          //设置画笔的颜色
+ctx.fillRect(0,0,300,300);						//这个是清除到原来的默认颜色；并不是透明色
+ctx.clearRect(0,0,300,300);						// 清理一块坐标内的内容
+// 这是中心的中心
+var arr=[50.5,150.5,250.5];
+
+var data=[];  //  最初的9个圆心的坐标
+for(var i=0;i<arr.length;i++){
+	for(var j=0;j<arr.length;j++){
+		var obj={x:arr[j],y:arr[i],flag:false}
+		data.push(obj)
+	}
+}
+var zuobiao=[];		//就是鼠标滑过的点的坐标 					
+make_arc();	//画圆点
+function make_arc(){
+	ctx.clearRect(0,0,300,300);	//清空 
+	for(var i=0;i<data.length;i++){
+		if(data[i].flag){
+			rend_arc(data[i].x,data[i].y,10,true,"red")
+			rend_arc(data[i].x,data[i].y,30,false,"red")
+		}else{
+			rend_arc(data[i].x,data[i].y,10,true,"#000")
+			rend_arc(data[i].x,data[i].y,30,false,"#000")
+		}
+	}
+};
+function rend_arc(x,y,r,flag,color){
+	ctx.beginPath();
+	ctx.strokeStyle = color;
+	ctx.fillStyle=color;
+	ctx.arc(x,y, r, 0, Math.PI * 2, true);
+	if(!flag){
+		ctx.stroke();
+	}else{
+		ctx.fill();
+	}
+	ctx.closePath();
+}
+var   me_f=false; //判断第一次就点到点上了
+$("#canvas").on("touchstart",function(e){
+	 me_f=false;
+	$("h1").html("请输入密码");
+	var _e=e.originalEvent.changedTouches[0];
+	var x=_e.pageX;
+	var y=_e.pageY;
+	var l=$("canvas").offset().left;
+	var t=$("canvas").offset().top;
+	var num=set_arc(x-l,y-t)+1;
+	if(num!=11&&num){
+		num=num-1;
+		me_f=true;
+		//放弃清理原来的了。。总是清理的有点多
+		// ctx.clearRect(data[num].x-50.5,data[num].y-50.5,data[num].x+49.5,data[num].y+49.5);
+		data[num].flag=true;
+		zuobiao.push(num);
+		rend_arc(data[num].x,data[num].y,10,true,"red")
+		rend_arc(data[num].x,data[num].y,30,false,"red")
+	}
+})
+$("#canvas").on("touchmove",function(e){
+	if(!me_f){
+		return false;
+	}
+	var _e=e.originalEvent.changedTouches[0];
+	var x=_e.pageX;
+	var y=_e.pageY;
+	var l=$("canvas").offset().left;
+	var t=$("canvas").offset().top;
+	send_fill(x-l,y-t);
+	//这里是要判断  经过的点；
+	var dian=set_arc(x-l,y-t)+1;
+	// var dian=set(x-l,y-t);
+	if(dian!=11){
+		if(dian){
+			dian=dian-1;
+		/*	console.log(dian)
+			return;*/
+			if(!data[dian].flag){
+				data[dian].flag=true;
+				zuobiao.push(dian);
+			}	
+		}
+		
+	};
+})
+function send_fill(x,y){
+	make_arc();	//画圆;
+	ctx.beginPath()
+	ctx.strokeStyle = "red";
+	// ctx.moveTo(data[zuobiao[0]].x,data[zuobiao[0]].y);//将画笔移到x0,y0处
+	ctx.moveTo(data[zuobiao[0]].x,data[zuobiao[0]].y);//将画笔移到x0,y0处
+	for(var n=1;n<zuobiao.length;n++){
+		ctx.lineTo(data[zuobiao[n]].x,data[zuobiao[n]].y);//将画笔移到x0,y0处
+	}
+	 ctx.lineTo(x,y);//从x0,y0到x1,y1画一条线
+	// ctx.fill();//填充
+	ctx.stroke();//画线
+	ctx.closePath();
+
+}
+$("#canvas").on("touchend",function(e){
+	if(!me_f){
+		return false;
+	}
+	panduan(zuobiao);
+	zuobiao=[];
+	for(var i=0;i<data.length;i++){
+		data[i].flag=false;
+	}
+	make_arc();	//画圆;
+})
+
+function panduan(arr){
+	if(!e_flag){
+		//创建密码
+		if(arr.length<6){
+			$("h1").html("密码必须要大于6位数");
+			return;
+		}
+		if(shoushi_password){
+			if(shoushi_password==arr.join()){
+				localStorage.shoushi_password=shoushi_password;
+				$("h1").html("密码储存成功");
+				setTimeout(function(){
+					$("h1").html("请输入密码解锁");
+				},500)
+				e_flag=true;
+				return;
+			}else{
+				$("h1").html("两次密码不一样");
+				setTimeout(function(){
+					$("h1").html("请重新输入");
+				},500)
+				return;
+			}
+		}
+		if(arr.length>5){
+			shoushi_password=arr.join();
+			$("h1").html("请再次输入密码");
+			return;
+		}
+	}else{
+		if(shoushi_password == arr.join() ){
+			$("h1").html("解锁成功，恭喜你~");
+		}else{
+			$("h1").html("密码输入错误");
+		}
+	}
+}
+// 计算是哪个点开始点击的；
+function set(x,y){
+	if(x>0&&x<100){
+		if(y>0&&y<100){
+			return 0;
+		}else if(y>100&&y<200){
+			return 3;
+		}else if(y>200&&y<300){
+			return 6;
+		}
+	}else if(x>100&&x<200){
+		if(y>0&&y<100){
+			return 1;
+		}else if(y>100&&y<200){
+			return 4;
+		}else if(y>200&&y<300){
+			return 7;
+		}
+	}else if(x>200&&x<300){
+		if(y>0&&y<100){
+			return 2;
+		}else if(y>100&&y<200){
+			return 5;
+		}else if(y>200&&y<300){
+			return 8;
+		}
+	}
+	return 10;
+}
+
+var cir=[];  //每一个点的位置的大小
+for(var i=0;i<data.length;i++){
+	var obj={}
+	obj.max_w=data[i].x+30;
+	obj.min_w=data[i].x-30;
+	obj.max_h=data[i].y+30;
+	obj.min_h=data[i].y-30;
+	cir.push(obj);
+}
+function set_arc(x,y){
+	var num=set(x,y)
+	if(num!=10){
+		var a=data[num].x;
+		var b=data[num].y;
+		if(Math.abs(x-a)<30&&Math.abs(y-b)<30){
+			//在里
+			return num;
+		}
+	}else{
+		return 10;
+	}
+}
+
+function deletes(){
+	localStorage.shoushi_password="";
+	alert("密码删除成功");
+	location.replace(location);
+}
+//  异步提交
+	/*$.ajax({
+		type : "GET",
+		url : "http://cachago.cn/home_ajax.php?do=new",
+		dataType : "jsonp",
+		jsonp: "jsoncallback",
+	    jsonpCallback:"success_jsonpCallback",
+		success:function(result){
+		}
+	})*/
+//  同步=》异步=》回调
+
+	//let是ES6语法，ES5中的变量作用域是函数，而let语法的作用域是当前块，在这里就是for循环体。
+// for(let i =0 ;i <5 ; i++ ){
+// 	setTimeout(function(){
+// 		console.log("1--"+i)
+// 	},0)
+// 	console.log("2--"+i)
+// }
+	// for(var i =0 ;i <5 ; i++ ){
+	// 	loop(i);
+	// }
+	// function loop(i){
+	// 	setTimeout(function(){
+	// 		// console.log(i)
+	// 	},100)
+	// }
+</script>
+</html>
